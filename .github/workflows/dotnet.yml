@@ -7,35 +7,18 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 6.0.x
-
-    - name: Restore dependencies
-      run: dotnet restore
+      uses: actions/checkout@v3
 
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build
 
     - name: Test
-      run: dotnet test --no-build --verbosity normal
-
-  merge:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      run: dotnet test --verbosity normal
 
     - name: Check for merge conflicts
       id: merge-check
@@ -47,12 +30,3 @@ jobs:
           echo "Merge conflict detected"
           exit 1
         fi
-
-    - name: Merge to master
-      if: steps.merge-check.outcome == 'success'
-      run: |
-        git checkout master
-        git merge --no-ff ${{ github.head_ref }}
-        git push origin master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
